@@ -16,8 +16,10 @@
 #include "Common/Thread.h"
 
 #include "Core/Config/GraphicsSettings.h"
+#include "Core/Config/UISettings.h"
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
+#include "Core/Host.h"
 #include "Core/HotkeyManager.h"
 #include "Core/IOS/IOS.h"
 #include "Core/IOS/USB/Bluetooth/BTBase.h"
@@ -143,8 +145,8 @@ void HotkeyScheduler::Run()
 
     if (Core::GetState() != Core::State::Stopping)
     {
-      // Obey window focus before checking hotkeys.
-      Core::UpdateInputGate();
+      // Obey window focus (config permitting) before checking hotkeys.
+      Core::UpdateInputGate(Config::Get(Config::MAIN_FOCUSED_HOTKEYS));
 
       HotkeyManagerEmu::GetStatus();
 
@@ -525,6 +527,13 @@ void HotkeyScheduler::Run()
 
     // Freelook
     static float fl_speed = 1.0;
+
+    if (IsHotkey(HK_FREELOOK_TOGGLE))
+    {
+      const bool new_value = !Config::Get(Config::GFX_FREE_LOOK);
+      Config::SetCurrent(Config::GFX_FREE_LOOK, new_value);
+      OSD::AddMessage(StringFromFormat("Freelook: %s", new_value ? "Enabled" : "Disabled"));
+    }
 
     if (IsHotkey(HK_FREELOOK_DECREASE_SPEED, true))
       fl_speed /= 1.1f;
